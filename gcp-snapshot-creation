@@ -1,0 +1,65 @@
+import json
+import pickle
+import os.path
+import googleapiclient
+from googleapiclient.discovery import build
+from oauth2client.client import GoogleCredentials
+from datetime import datetime, timedelta
+import time
+credentials = GoogleCredentials.get_application_default()
+compute = googleapiclient.discovery.build('compute', 'v1',credentials=credentials)
+
+def list_instancs(project,zone,compute=compute):
+
+    # result = compute.instances().list(project=project, zone=zone).execute()
+    # return result['items'] if 'items' in result else None
+    result1 = compute.snapshots().list(project=project, zone=zone).execute()
+    # print(result1)
+    return result1['items'] if 'items' in result1 else None
+    # for item in result1['items']:
+    #     return item
+
+    # if 'items' in result:
+    #     return result['items'](0)
+    # else:
+    #     return None
+
+def list_snapshots(project,zone,compute=compute):
+
+    # result = compute.instances().list(project=project, zone=zone).execute()
+    # return result['items'] if 'items' in result else None
+    result1 = compute.snapshots().list(project=project).execute()
+    # print(result1)
+    # return result1['items'] if 'items' in result1 else None
+    # for item in result1['items']:
+    #     return item
+
+    # if 'items' in result1:
+    #     # for item in result1:
+    #     return result1[0]
+    # else:
+    #     return None
+    # for dic in result1:
+    #     for val in dic.values():
+    #         return val
+
+
+    for each_item in result1['items']:
+        if each_item['name'] == 'snapshot-1':
+            request = compute.disks().createSnapshot(project=project,zone=zone,disk='fico-insight-1-dev',body='snapshot-2')
+            response = request.execute()
+            print(response)
+
+            while True:
+                result = compute.zoneOperations().get(project=project,zone=zone,operation=response['name']).execute()
+                print(result)
+                if result['status'] == 'DONE':
+                    print("done.")
+                    if 'error' in result:
+                        raise Exception(result['error'])
+                    return result
+
+                time.sleep(1)
+
+# list_instancs('fdx3536996-npe-1','us-west2-a')
+# list_snapshots('fdx3536996-npe-1','us-west2-a')
